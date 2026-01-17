@@ -27,7 +27,7 @@ async function init() {
       }
     },
     {
-      type: 'select',
+      type: argv.template ? null : 'select',
       name: 'template',
       message: 'Select a template:',
       choices: [
@@ -43,7 +43,7 @@ async function init() {
     }
   });
 
-  const { template } = result;
+  const template = argv.template || result.template;
   const root = path.join(cwd, targetDir);
 
   if (fs.existsSync(root)) {
