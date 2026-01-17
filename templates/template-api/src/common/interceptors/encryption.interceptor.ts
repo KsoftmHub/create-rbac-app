@@ -13,13 +13,33 @@ export class EncryptionInterceptor implements NestInterceptor {
   private crypto: MeebonCrypto | null = null;
 
   constructor() {
-    const privateKey = process.env.API_PRIVATE_KEY;
-    const publicKey = process.env.API_PUBLIC_KEY;
+    const cleanPem = (pem: string | undefined) => {
+      if (!pem) return undefined;
+      const clean = pem.replace(/"/g, '').replace(/\\n/g, '\n').trim();
+      const headerMatch = clean.match(/-----BEGIN [^-]+-----/);
+      const footerMatch = clean.match(/-----END [^-]+-----/);
+
+      if (!headerMatch || !footerMatch) return clean;
+
+      const header = headerMatch[0];
+      const footer = footerMatch[0];
+      const base64 = clean
+        .replace(header, '')
+        .replace(footer, '')
+        .replace(/\s/g, '');
+
+      const formatted = base64.match(/.{1,64}/g)?.join('\n');
+      return `${header}\n${formatted}\n${footer}`;
+    };
+
+    const privateKey = cleanPem(process.env.API_PRIVATE_KEY);
+    const publicKey = cleanPem(process.env.API_PUBLIC_KEY);
 
     if (privateKey && publicKey) {
       this.crypto = MeebonCrypto.init({
         privateKeyPem: privateKey,
         publicKeyPem: publicKey,
+        schema: 'RSA-OAEP',
       });
     } else {
       console.warn(

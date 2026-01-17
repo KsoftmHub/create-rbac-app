@@ -11,6 +11,19 @@ describe('Encryption (e2e)', () => {
   let app: INestApplication;
   let clientPublicKey: string;
 
+  const cleanPem = (pem: string | undefined) => {
+    if (!pem) return undefined;
+    const clean = pem.replace(/"/g, '').replace(/\\n/g, '\n').trim();
+    const headerMatch = clean.match(/-----BEGIN [^-]+-----/);
+    const footerMatch = clean.match(/-----END [^-]+-----/);
+    if (!headerMatch || !footerMatch) return clean;
+    const header = headerMatch[0];
+    const footer = footerMatch[0];
+    const base64 = clean.replace(header, '').replace(footer, '').replace(/\s/g, '');
+    const formatted = base64.match(/.{1,64}/g)?.join('\n');
+    return `${header}\n${formatted}\n${footer}`;
+  };
+
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -24,7 +37,7 @@ describe('Encryption (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    const envPublicKey = process.env.API_PUBLIC_KEY;
+    const envPublicKey = cleanPem(process.env.API_PUBLIC_KEY);
     if (!envPublicKey) {
       throw new Error('API_PUBLIC_KEY not found in .env');
     }
@@ -43,10 +56,10 @@ describe('Encryption (e2e)', () => {
         const body = res.body;
         if (!body.data) throw new Error('Response body.data is missing (not encrypted?)');
 
-        const apiPrivateKey = process.env.API_PRIVATE_KEY;
+        const apiPrivateKey = cleanPem(process.env.API_PRIVATE_KEY);
         if (!apiPrivateKey) throw new Error('API_PRIVATE_KEY not found for decryption test');
 
-        const decrypted = MeebonCrypto.decryptData(body.data, apiPrivateKey);
+        const decrypted = MeebonCrypto.decryptData(body.data, apiPrivateKey as string);
         // Default message in AppController is "You have generic view access. Filtering data..."
         if (!decrypted.includes('You have generic view access')) {
           throw new Error('Decryption failed or content mismatch: ' + decrypted);
@@ -55,16 +68,9 @@ describe('Encryption (e2e)', () => {
   });
 
   it('/api/example (POST) should decrypt request body', async () => {
-    // Assuming we might add a POST route or just testing the interceptor's decryption logic
-    // We'll try hitting a non-existent POST route but verify the interceptor doesn't crash
-    // and correctly processes the 'data' field if present.
-    // To properly test this, we should ideally have a POST route in the controller.
-
     const payload = JSON.stringify({ test: 'data' });
     const encryptedPayload = MeebonCrypto.encryptData(payload, clientPublicKey);
 
-    // We expect 404 since there is no POST /api/example, but the Interceptor runs first.
-    // If it fails to decrypt, it might log an error.
     return request(app.getHttpServer())
       .post('/api/example')
       .send({ data: encryptedPayload })
