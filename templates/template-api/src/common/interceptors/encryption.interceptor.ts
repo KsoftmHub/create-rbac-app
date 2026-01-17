@@ -1,8 +1,8 @@
 import {
-  CallHandler,
-  ExecutionContext,
   Injectable,
   NestInterceptor,
+  ExecutionContext,
+  CallHandler,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -10,12 +10,15 @@ import { MeebonCrypto } from '@meebon/meebon-crypto';
 
 @Injectable()
 export class EncryptionInterceptor implements NestInterceptor {
-  private crypto: MeebonCrypto | null = null;
+  private crypto: MeebonCrypto;
 
   constructor() {
     const cleanPem = (pem: string | undefined) => {
       if (!pem) return undefined;
+      // Strip quotes and handle escaped newlines
       const clean = pem.replace(/"/g, '').replace(/\\n/g, '\n').trim();
+
+      // Reconstruct PEM to standard formatting (crucial for some parsers)
       const headerMatch = clean.match(/-----BEGIN [^-]+-----/);
       const footerMatch = clean.match(/-----END [^-]+-----/);
 
@@ -23,12 +26,9 @@ export class EncryptionInterceptor implements NestInterceptor {
 
       const header = headerMatch[0];
       const footer = footerMatch[0];
-      const base64 = clean
-        .replace(header, '')
-        .replace(footer, '')
-        .replace(/\s/g, '');
-
+      const base64 = clean.replace(header, '').replace(footer, '').replace(/\s/g, '');
       const formatted = base64.match(/.{1,64}/g)?.join('\n');
+
       return `${header}\n${formatted}\n${footer}`;
     };
 
@@ -50,6 +50,7 @@ export class EncryptionInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
+    const shouldEncryptResponse = request.headers['x-encrypt-response'] === 'true';
 
     // Decrypt Request Body
     if (this.crypto && request.body && request.body.data) {
@@ -58,14 +59,13 @@ export class EncryptionInterceptor implements NestInterceptor {
         request.body = JSON.parse(decrypted);
       } catch (e) {
         console.error('Decryption failed:', e);
-        // Optional: Throw ForbiddenException or BadRequestException
       }
     }
 
     return next.handle().pipe(
       map((data) => {
-        // Encrypt Response Body
-        if (this.crypto && data) {
+        // Encrypt Response Body if requested
+        if (this.crypto && data && shouldEncryptResponse) {
           try {
             const stringified = JSON.stringify(data);
             const encrypted = this.crypto.encrypt(stringified);

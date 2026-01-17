@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import { Guard } from './components/Guard'
 import { Todo, User } from './auth/types'
+import { secureFetch } from './auth/crypto'
 import './index.css'
 
 // --- MOCK DATA ---
@@ -89,6 +90,32 @@ function DemoContent() {
             <button style={{ backgroundColor: '#aa2222' }}>Delete Task</button>
           </Guard>
         </div>
+      </div>
+
+      {/* SECURE API DEMO SECTION */}
+      <div style={{ marginTop: '2rem', border: '1px solid #007bff', padding: '1rem', borderRadius: '8px', background: '#007bff11' }}>
+        <h3>🔐 Secure API Demo</h3>
+        <p style={{ fontSize: '0.9rem' }}>This section demonstrates End-to-End Encryption with the NestJS backend.</p>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
+          <button
+            onClick={() => secureFetch('http://localhost:3000/api/example').then(r => r.json()).then(alert).catch(console.error)}
+            style={{ backgroundColor: '#1a73e8' }}
+          >
+            Fetch from API
+          </button>
+          <button
+            onClick={() => secureFetch('http://localhost:3000/api/example', {
+              method: 'POST',
+              body: JSON.stringify({ item: 'New Task' })
+            }).then(r => r.json()).then(alert).catch(console.error)}
+            style={{ backgroundColor: '#12a4af' }}
+          >
+            Secure POST
+          </button>
+        </div>
+        <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.5rem' }}>
+          Check <code>src/auth/crypto.ts</code> to see how <code>secureFetch</code> handles automatic encryption.
+        </p>
       </div>
 
       <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#888' }}>
