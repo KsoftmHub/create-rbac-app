@@ -6,6 +6,10 @@
   "bin": {
     "create-rbac-app": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "templates"
+  ],
   "scripts": {
     "build": "node scripts/build.js",
     "dev": "node scripts/build.js --watch",
