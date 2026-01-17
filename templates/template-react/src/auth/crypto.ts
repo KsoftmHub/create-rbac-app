@@ -23,11 +23,11 @@ const cleanPem = (pem: string | undefined) => {
 };
 
 const cleanedKey = cleanPem(publicKey);
+const privateKey = (process.env as any).VITE_API_PRIVATE_KEY;
+const cleanedPrivateKey = cleanPem(privateKey);
 
 /**
  * Encrypts data using the API public key.
- * This is a static method to avoid MeebonCrypto instance initialization in the browser
- * which might throw errors if a private key is missing.
  */
 export const encrypt = (data: string) => {
   if (!cleanedKey) return data;
@@ -40,6 +40,25 @@ export const encrypt = (data: string) => {
 };
 
 /**
+ * Decrypts data using the private key (for demo purposes).
+ */
+export const decrypt = (encryptedData: string) => {
+  if (!cleanedPrivateKey) return encryptedData;
+  try {
+    // We create a temporary instance for decryption
+    const crypto = MeebonCrypto.init({
+      privateKeyPem: cleanedPrivateKey,
+      publicKeyPem: cleanedKey || '', // Required by init but not used for decrypting
+      schema: 'RSA-OAEP'
+    });
+    return crypto.decrypt(encryptedData);
+  } catch (e) {
+    console.error('Decryption failed:', e);
+    return encryptedData;
+  }
+};
+
+/**
  * A wrapper around fetch that automatically encrypts JSON request bodies
  * using the configured API_PUBLIC_KEY.
  */
@@ -48,6 +67,7 @@ export async function secureFetch(url: string, options: RequestInit = {}) {
 
   newOptions.headers = {
     ...newOptions.headers,
+    'x-encrypt-response': 'true'
   } as any;
 
   // Encrypt request body if it's JSON
@@ -63,5 +83,41 @@ export async function secureFetch(url: string, options: RequestInit = {}) {
     }
   }
 
-  return fetch(url, newOptions);
+  const apiPrefix = (process.env as any).VITE_API_URL || 'http://localhost:3000';
+  const fullUrl = url.startsWith('http') ? url : `${apiPrefix}${url}`;
+
+  try {
+    const response = await fetch(fullUrl, newOptions);
+
+    // Automatically handle encrypted responses if they are in { data: "..." } format
+    if (response.ok) {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const json = await response.json();
+        if (json && json.data && typeof json.data === 'string' && cleanedPrivateKey) {
+          try {
+            const decrypted = decrypt(json.data);
+            // Return a mock response object that behaves like the original but with decrypted data
+            return new Response(decrypted, {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers
+            });
+          } catch (decErr) {
+            console.error('Failed to decrypt response:', decErr);
+            // Return dummy response with decrypted failed message
+            return new Response(JSON.stringify(json), { status: response.status, headers: response.headers });
+          }
+        }
+        // If not encrypted or no private key, return original-like response
+        return new Response(JSON.stringify(json), { status: response.status, headers: response.headers });
+      }
+    }
+
+    return response;
+  } catch (e: any) {
+    console.error('Fetch failed:', e);
+    const message = e.message || 'Unknown network error';
+    throw new Error(`Failed to reach API at ${fullUrl}. Error: ${message}. Ensure backend is running and CORS is configured.`);
+  }
 }

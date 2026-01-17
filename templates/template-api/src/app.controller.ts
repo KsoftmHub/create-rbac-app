@@ -13,6 +13,11 @@ const TODOS = [
 @Controller('api/example')
 export class AppController {
 
+  @Get('health')
+  healthCheck() {
+    return { status: 'ok', message: 'API is reachable' };
+  }
+
   @Get()
   @UseGuards(AuthGuard, PoliciesGuard)
   @CheckPermissions('view', 'todos', (req) => {

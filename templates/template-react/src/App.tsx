@@ -96,18 +96,24 @@ function DemoContent() {
       <div style={{ marginTop: '2rem', border: '1px solid #007bff', padding: '1rem', borderRadius: '8px', background: '#007bff11' }}>
         <h3>🔐 Secure API Demo</h3>
         <p style={{ fontSize: '0.9rem' }}>This section demonstrates End-to-End Encryption with the NestJS backend.</p>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
           <button
-            onClick={() => secureFetch('http://localhost:3000/api/example').then(r => r.json()).then(alert).catch(console.error)}
-            style={{ backgroundColor: '#1a73e8' }}
+            onClick={() => fetch('http://localhost:3000/api/example/health').then(r => r.json()).then(() => alert('✅ API connection successful!')).catch(err => alert('❌ API unreachable: ' + err.message))}
+            style={{ backgroundColor: '#4caf50' }}
           >
-            Fetch from API
+            Check API Connection
           </button>
           <button
-            onClick={() => secureFetch('http://localhost:3000/api/example', {
+            onClick={() => secureFetch('/api/example').then(r => r.json()).then(data => alert(JSON.stringify(data, null, 2))).catch(err => alert('❌ Fetch Error: ' + err.message))}
+            style={{ backgroundColor: '#1a73e8' }}
+          >
+            Secure GET
+          </button>
+          <button
+            onClick={() => secureFetch('/api/example', {
               method: 'POST',
               body: JSON.stringify({ item: 'New Task' })
-            }).then(r => r.json()).then(alert).catch(console.error)}
+            }).then(r => r.json()).then(data => alert(JSON.stringify(data, null, 2))).catch(err => alert('❌ POST Error: ' + err.message))}
             style={{ backgroundColor: '#12a4af' }}
           >
             Secure POST

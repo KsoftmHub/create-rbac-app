@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
     ],
     define: {
       'process.env.VITE_API_PUBLIC_KEY': JSON.stringify(env.VITE_API_PUBLIC_KEY),
+      'process.env.VITE_API_PRIVATE_KEY': JSON.stringify(env.VITE_API_PRIVATE_KEY),
     }
   };
 })
