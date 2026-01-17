@@ -1,0 +1,11 @@
+/node_modules
+/.next/
+/.pnp
+.pnp.js
+/coverage/
+/.ds_store
+/.env*.local
+/.vercel/
+*.log
+/dev.db
+/dev.db-journal
