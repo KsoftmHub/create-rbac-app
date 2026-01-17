@@ -67,6 +67,13 @@ if (can('view', 'dashboard')) {
 }
 ```
 
+## 🛡️ End-to-End Encryption
+
+This template is pre-configured with `@meebon/meebon-crypto` to secure sensitive data.
+
+-   **Environment Variable**: `VITE_API_PUBLIC_KEY` is automatically set in your `.env` file by the CLI.
+-   **Polyfills**: `vite.config.ts` includes `vite-plugin-node-polyfills` to allow secure crypto operations in the browser.
+
 ## 🛠️ Customizing
 
 1.  **Add Roles/Permissions**: Open `src/App.tsx` (or your real backend data) and add roles like "Manager" or "Editor" to your User object.

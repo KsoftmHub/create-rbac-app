@@ -8,6 +8,13 @@ This CLI tool generates two types of templates that share a **unified permission
 
 Both templates verify permissions using the exact same logic structure, making it easy to build full-stack apps where your "Policy Logic" is consistent everywhere.
 
+## 🔐 Secure by Default
+
+Your apps are pre-configured with **End-to-End Encryption** using `@meebon/meebon-crypto`.
+-   **Smart Key Generation**: The CLI automatically generates 3072-bit RSA keys during scaffolding.
+-   **Auto-Config**: Public/Private keys are injected into your `.env` files automatically.
+
+
 ## ✨ Quick Start
 
 You don't need to install anything globally. Just run:

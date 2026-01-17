@@ -2,9 +2,9 @@
   "name": "nestjs-api-rbac",
   "version": "0.0.1",
   "description": "",
-  "author": "",
+  "author": "KsoftM",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -12,7 +12,8 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
     "@nestjs/common": "^9.0.0",
@@ -20,7 +21,9 @@
     "@nestjs/platform-express": "^9.0.0",
     "@prisma/client": "^5.0.0",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "dotenv": "^17.2.3",
+    "@meebon/meebon-crypto": "latest"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",

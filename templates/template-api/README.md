@@ -64,6 +64,14 @@ We include a robust RBAC schema:
 -   **Role**: Has many Permissions.
 -   **Permission**: Links a `resource` + `action` to a `policy` string (e.g., "IS_OWNER").
 
+## 🛡️ Encryption Interceptor
+
+Your API is protected by a global **Encryption Interceptor**.
+
+-   **Automatic Decryption**: Incoming request bodies (`req.body.data`) are decrypted using your `API_PRIVATE_KEY` before reaching your controller.
+-   **Automatic Encryption**: Outgoing responses are encrypted using the client's public key (if configured) or your keys, ensuring data safety.
+-   **Keys**: `API_PRIVATE_KEY` and `API_PUBLIC_KEY` are managed in your `.env` file.
+
 ## 🛠️ Customizing
 
 1.  **Switch Database**: Change `provider = "sqlite"` to `"postgresql"` in `prisma/schema.prisma` and update your `.env` file.
