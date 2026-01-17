@@ -1,19 +1,17 @@
-import React, { ReactNode } from 'react';
-import { usePermission } from '../auth/AuthContext';
-import { ResourceType } from '../auth/types';
+import React from 'react';
+import { useAuth } from '../hooks/useAuth';
 
 interface GuardProps {
+  resource: string;
   action: string;
-  resource: ResourceType;
-  data?: any;
-  fallback?: ReactNode;
-  children: ReactNode;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
 }
 
-export const Guard = ({ action, resource, data, children, fallback = null }: GuardProps) => {
-  const { can } = usePermission();
+export const Guard: React.FC<GuardProps> = ({ resource, action, children, fallback = null }) => {
+  const { hasPermission } = useAuth();
 
-  if (can(action, resource, data)) {
+  if (hasPermission(resource, action)) {
     return <>{children}</>;
   }
 

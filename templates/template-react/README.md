@@ -1,17 +1,15 @@
 # ⚛️ React + Vite + RBAC Template
 
-Welcome to your new React application! This template is pre-configured with a powerful **Role-Based Access Control (RBAC)** system.
+Welcome to your new React application! This template is pre-configured with a powerful **Role-Based Access Control (RBAC)** system, **Redux State Management**, and **JWT Authentication**.
 
 ## 🚀 Getting Started
 
 ### 1. Install Dependencies
-Open your terminal in this folder and run:
 ```bash
-npm install
+pnpm install # or npm install
 ```
 
 ### 2. Run the App
-Start the development server:
 ```bash
 npm run dev
 ```
@@ -19,69 +17,52 @@ Open the link shown in the terminal (usually `http://localhost:5173`).
 
 ---
 
-## 🔐 How the Permissions Work
+## 🔐 Authentication & Persistent State
 
-This app distinguishes between **"Authentication"** (Who are you?) and **"Authorization"** (What can you do?).
+This app features a full-stack authentication flow:
 
-### 1. The Policy File (`src/auth/policy.ts`)
-This is the brain of your permission system. It maps "Policy Strings" from your database (or mock data) to actual code.
+### 1. JWT with Auto-Refresh
+The app uses a **Universal Axios instance** (`src/api/axios.ts`) that:
+-   Automatically attaches your Access Token to every request.
+-   Handles 401 errors by attempting to rotate tokens via `/auth/refresh`.
+-   Retries failed requests automatically after a successful refresh.
 
-```typescript
-export const POLICY_HANDLERS = {
-  // Simple rule: Always allow
-  ALWAYS_ALLOW: () => true,
+### 2. Redux State & Persistence
+Auth state (user data and tokens) is managed by **Redux Toolkit** and persisted to local storage via **Redux Persist**. This ensures you stay logged in even after a page refresh.
 
-  // Complex rule: Allow only if user owns the data
-  IS_OWNER: (user, data) => data.userId === user.id,
+### 3. Built-in Auth Pages
+Ready-to-use, modern **Login** and **Register** pages are included at `src/pages/auth/`.
 
-  // Composition: Reuse other rules!
-  DELETE_OWN_COMPLETED: (user, data) =>
-    POLICY_HANDLERS.IS_OWNER(user, data) && data.completed
-};
-```
+---
 
-### 2. The `<Guard>` Component
-Use this wrapper to show/hide UI elements based on permissions.
+## 🛡️ Role-Based Access Control (RBAC)
 
+### 1. The `<Guard>` Component
+Wrap any part of your UI to show/hide it based on permissions:
 ```tsx
-import { Guard } from './components/Guard';
-
-<Guard
-  action="delete"       // The action you want to check
-  resource="todos"      // The resource you are acting on
-  data={todo}           // The data needed for the check (e.g. to check owner)
-  fallback={<span>🚫 No Access</span>} // (Optional) What to show if denied
->
-  <button>Delete Button</button>
+<Guard resource="todos" action="delete" fallback={<p>Locked</p>}>
+  <button>Delete Resource</button>
 </Guard>
 ```
 
-### 3. The `usePermission` Hook
-Use this if you need to check permissions inside your functions or effects.
-
+### 2. The `useAuth()` Hook
+Centralized hook for all auth and permission needs:
 ```tsx
-const { can } = usePermission();
-
-if (can('view', 'dashboard')) {
-  console.log("User can view dashboard!");
-}
+const { user, isAuthenticated, hasPermission, login, logout } = useAuth();
 ```
 
-## 🛡️ End-to-End Encryption
-
-This template is pre-configured with `@meebon/meebon-crypto` to secure sensitive data.
-
--   **Environment Variable**: `VITE_API_PUBLIC_KEY` is automatically set in your `.env` file by the CLI.
--   **Polyfills**: `vite.config.ts` includes `vite-plugin-node-polyfills` to allow secure crypto operations in the browser.
+---
 
 ## 🛠️ Customizing
 
-1.  **Add Roles/Permissions**: Open `src/App.tsx` (or your real backend data) and add roles like "Manager" or "Editor" to your User object.
-2.  **Add New Policies**: Go to `src/auth/policy.ts` and add a new function to `POLICY_HANDLERS`.
-3.  **Update Types**: Edit `src/auth/types.ts` if you add new Resources (e.g., "products", "orders").
+1.  **Modify Permissions**: Roles and permissions are now fetched from the backend. Assign roles to users in your API database.
+2.  **Add New Policies**: Local policy logic can still be added to `src/auth/policy.ts` for frontend-side checks.
+3.  **Update Config**: Change `VITE_API_URL` in your `.env` file to point to your backend.
 
 ## 📚 Folder Structure
 
--   `src/auth/` -> Contains all permission logic (Context, Policy, Types).
--   `src/components/` -> Reusable UI components (Guard).
--   `src/App.tsx` -> Demo page showing how to use everything.
+-   `src/api/` -> Universal Axios instance with interceptors.
+-   `src/store/` -> Redux store and persistence config.
+-   `src/hooks/` -> `useAuth` custom hook.
+-   `src/pages/auth/` -> Login and Register pages.
+-   `src/components/` -> `ProtectedRoute` and `Guard` components.

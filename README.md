@@ -1,19 +1,21 @@
 # 🚀 Create RBAC App
 
-**The easiest way to scaffold production-ready apps with built-in Role-Based Access Control (RBAC).**
+**The easiest way to scaffold production-ready apps with built-in Role-Based Access Control (RBAC) and Full-Stack Authentication.**
 
-This CLI tool generates two types of templates that share a **unified permission logic**:
-1.  **Frontend**: React (Vite) + TypeScript
-2.  **Backend**: NestJS + Prisma + TypeScript
+This CLI tool generates two types of templates that share a **unified permission logic** and a **complete JWT system**:
+1.  **Frontend**: React (Vite) + Typescript + Redux Toolkit + JWT Flow
+2.  **Backend**: NestJS + Prisma (SQLite) + JWT Strategy
 
-Both templates verify permissions using the exact same logic structure, making it easy to build full-stack apps where your "Policy Logic" is consistent everywhere.
+---
 
-## 🔐 Secure by Default
+## 🔐 Production-Ready Authentication
 
-Your apps are pre-configured with **End-to-End Encryption** using `@meebon/meebon-crypto`.
--   **Smart Key Generation**: The CLI automatically generates 3072-bit RSA keys during scaffolding.
--   **Auto-Config**: Public/Private keys are injected into your `.env` files automatically.
+Unlike other templates, we don't use mock data. Both templates are hardwired for security:
 
+-   **JWT with Rotation**: Access Tokens (15m) and Refresh Tokens (7d) are handled out of the box.
+-   **State Persistence**: Frontend state survives refreshes using Redux Persist.
+-   **Token Interceptors**: Axios is configured to handle token injection and auto-refresh logic.
+-   **End-to-End Encryption**: Secured by `@meebon/meebon-crypto` for sensitive payloads.
 
 ## ✨ Quick Start
 
@@ -24,40 +26,31 @@ npx create-rbac-app@latest
 ```
 
 Follow the prompts:
-1.  Enter your **Project Name** (e.g., `my-super-app`).
+1.  Enter your **Project Name**.
 2.  Select a **Template**:
-    -   `React (Vite + TS + RBAC)`
-    -   `API (NestJS + Prisma + RBAC)`
+    -   `React (Vite + TS + RBAC + Redux)`
+    -   `API (NestJS + Prisma + RBAC + JWT)`
 
 The CLI will create the folder and copy all the necessary files.
 
 ## 📦 Templates Overview
 
 ### 1. React Template (Frontend)
--   **Tech Stack**: Vite, React, TypeScript.
+-   **Tech Stack**: Vite, React, Redux Toolkit, Redux Persist, Tailwind, Lucide.
 -   **Features**:
-    -   **AuthContext**: Manages user login state.
-    -   **`<Guard>` Component**: Protects UI elements declarative (e.g., hide "Delete" button if no permission).
-    -   **`usePermission()` Hook**: Check permissions in your code logic.
-    -   **Policy Engine**: Central file (`src/auth/policy.ts`) to define rules like `IS_OWNER` or `DELETE_OWN_COMPLETED`.
+    -   **Redux Store**: Centralized auth state with persistence.
+    -   **useAuth() Hook**: Easy interaction with authentication and permissions.
+    -   **Guard System**: Declarative `<Guard>` component and `ProtectedRoute` for routing.
+    -   **Auth Pages**: Beautiful, interactive Login and Register pages.
 
 ### 2. API Template (Backend)
--   **Tech Stack**: NestJS, Prisma (SQLite by default), TypeScript.
+-   **Tech Stack**: NestJS, Prisma (SQLite), Passport, bcrypt.
 -   **Features**:
-    -   **RBAC Guards**: Protect API endpoints automatically.
-    -   **`@CheckPermissions()` Decorator**: Add rules to your Controllers easily.
-    -   **Unified Logic**: Uses the same `src/auth/policy.ts` structure as the frontend.
-
-## 🛠️ Developing the CLI (For Contributors)
-
-If you want to modify *this* tool itself:
-
-1.  Clone this repo.
-2.  Run `npm install`.
-3.  Make changes to `src/cli.ts` or the `templates/` folder.
-4.  Run `npm run build` to bundle the CLI.
-5.  Test locally: `node dist/cli.js my-test-project`
+    -   **JWT Endpoints**: Full login, registration, and token refresh controllers.
+    -   **Database Integration**: Real user and role persistence.
+    -   **RBAC Guards**: Controller-level `@CheckPermissions()` enforcement.
+    -   **Secure Hashing**: Password hashing via bcrypt.
 
 ---
 
-*Generated definitions for `User`, `Role`, and `Permission` are included in both templates out of the box.*
+*Unified permission definitions ensure your policy logic stays consistent from the backend to the frontend UI.*

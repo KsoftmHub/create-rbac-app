@@ -1,6 +1,6 @@
 # 🦁 NestJS API + RBAC Template
 
-Welcome to your new NestJS API! This template is pre-configured with **Prisma** (Database) and a **Role-Based Access Control (RBAC)** system using Guards and Decorators.
+Welcome to your new NestJS API! This template is pre-configured with **Prisma** (Database), **JWT Authentication** (Access & Refresh Tokens), and a **Role-Based Access Control (RBAC)** system.
 
 ## 🚀 Getting Started
 
@@ -10,11 +10,12 @@ npm install
 ```
 
 ### 2. Setup Database (Prisma)
-This template uses a local SQLite file (`dev.db`) by default, so you don't need to install Postgres or MySQL yet.
+This template uses a local SQLite file (`dev.db`) by default.
 
-Generate the Prisma Client:
+Generate the Prisma Client and migrate:
 ```bash
 npx prisma generate
+npx prisma migrate dev --name init
 ```
 *(Optional) To view your database UI:*
 ```bash
@@ -29,57 +30,50 @@ The server will start at `http://localhost:3000`.
 
 ---
 
-## 🔐 How Permissions Work
+## 🔐 Authentication (JWT)
 
-We use standard NestJS **Guards** to protect your routes. The logic matches the React template perfectly.
+This API implements a robust JWT-based authentication system with **Refresh Tokens**.
 
-### 1. The `@CheckPermissions` Decorator
-To protect a route (like `GET /api/example`), simply add the decorator to your Controller in `src/app.controller.ts`.
+### Endpoints
+-   `POST /auth/register`: Create a new user account.
+-   `POST /auth/login`: Authenticate and receive an Access Token (15m) and Refresh Token (7d).
+-   `POST /auth/refresh`: Exchange a valid Refresh Token for a new Access Token (Token Rotation).
 
+### Token Security
+-   Access Tokens are used for authorizing requests via the `Bearer` scheme.
+-   Refresh Tokens are stored in the database and rotated upon use to maximize security.
+
+---
+
+## 🛡️ Role-Based Access Control (RBAC)
+
+We use standard NestJS **Guards** and **Passport JWT Strategy** to protect your routes.
+
+### 1. The `@UseGuards(JwtAuthGuard)`
+Protect any route or controller by adding the guard.
+
+### 2. The `@CheckPermissions` Decorator
+To enforce specific RBAC rules:
 ```typescript
 @Get()
-@UseGuards(AuthGuard, PoliciesGuard) // <--- 1. Apply the Guards
-@CheckPermissions('view', 'todos', (req) => {
-    // <--- 2. Define the Rule
-
-    // (Optional) Return data for ABAC checks (like checking ownership)
-    // For listing items, we might return null or filtered criteria
-    return null;
-})
+@UseGuards(JwtAuthGuard, PoliciesGuard)
+@CheckPermissions('view', 'todos')
 getTodos() { ... }
 ```
 
-### 2. The Logic (`src/auth/policy.ts`)
-Just like the frontend, this file defines **HOW** permissions are checked.
+### 3. The Logic (`src/auth/policy.ts`)
+This file defines **HOW** permissions are checked. It handles policy strings like `IS_OWNER`.
 
-```typescript
-export const POLICY_HANDLERS = {
-  IS_OWNER: (user, data) => data.userId === user.id,
-};
-```
-
-### 3. Database Schema (`prisma/schema.prisma`)
-We include a robust RBAC schema:
--   **User**: Has many Roles.
--   **Role**: Has many Permissions.
--   **Permission**: Links a `resource` + `action` to a `policy` string (e.g., "IS_OWNER").
-
-## 🛡️ Encryption Interceptor
-
-Your API is protected by a global **Encryption Interceptor**.
-
--   **Automatic Decryption**: Incoming request bodies (`req.body.data`) are decrypted using your `API_PRIVATE_KEY` before reaching your controller.
--   **Automatic Encryption**: Outgoing responses are encrypted using the client's public key (if configured) or your keys, ensuring data safety.
--   **Keys**: `API_PRIVATE_KEY` and `API_PUBLIC_KEY` are managed in your `.env` file.
+---
 
 ## 🛠️ Customizing
 
-1.  **Switch Database**: Change `provider = "sqlite"` to `"postgresql"` in `prisma/schema.prisma` and update your `.env` file.
+1.  **Add Roles/Permissions**: Modify the database via Prisma Studio or scripts.
 2.  **Add Policies**: Add new logic to `src/auth/policy.ts`.
-3.  **Real Auth**: Currently `AuthService` mocks a user ("Alice"). Connect this to a real JWT strategy in `src/auth/auth.service.ts` when ready.
+3.  **JWT Secret**: Update `JWT_SECRET` in your `.env` file for production.
 
 ## 📚 Folder Structure
 
--   `src/auth/` -> Auth Module, Guards, Decorators, and Policy Engine.
--   `src/app.controller.ts` -> Example Controller with protected routes.
--   `prisma/` -> Database schema.
+-   `src/auth/` -> JWT Strategy, Guards, Controllers, and Policy Engine.
+-   `src/prisma/` -> Database service and connectivity.
+-   `prisma/` -> Database schema and migrations.
