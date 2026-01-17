@@ -54,9 +54,6 @@ async function init() {
 
   console.log(`\nScaffolding project in ${root}...`);
 
-  // TODO: improved scaffolding logic (copying generic templates)
-  // For now we will just create the dir to prove it works
-
   await fs.ensureDir(root);
 
   const templateDir = path.resolve(__dirname, '../templates', template);
@@ -67,16 +64,7 @@ async function init() {
   }
 
   try {
-    await fs.copy(templateDir, root, {
-      filter: (src) => {
-        return !src.includes('node_modules');
-      }
-    });
-
-    const gitignore = path.join(root, '_gitignore');
-    if (fs.existsSync(gitignore)) {
-      fs.renameSync(gitignore, path.join(root, '.gitignore'));
-    }
+    await copy(templateDir, root);
 
     const pkgPath = path.join(root, 'package.json');
     if (fs.existsSync(pkgPath)) {
@@ -94,6 +82,30 @@ async function init() {
   console.log(`  cd ${targetDir}`);
   console.log(`  npm install`);
   console.log(`  npm run dev\n`);
+}
+
+async function copy(src: string, dest: string) {
+  const stat = await fs.stat(src);
+  if (stat.isDirectory()) {
+    await copyDir(src, dest);
+  } else {
+    await fs.copy(src, dest);
+  }
+}
+
+async function copyDir(srcDir: string, destDir: string) {
+  await fs.ensureDir(destDir);
+  const files = await fs.readdir(srcDir);
+  for (const file of files) {
+    if (file === 'node_modules') continue;
+
+    const srcFile = path.resolve(srcDir, file);
+
+    // Rename _gitignore to .gitignore
+    const destFile = path.resolve(destDir, file === '_gitignore' ? '.gitignore' : file);
+
+    await copy(srcFile, destFile);
+  }
 }
 
 init().catch((e) => {
