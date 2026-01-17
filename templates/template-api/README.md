@@ -1,21 +1,21 @@
-# Next.js API + RBAC Template
+# NestJS API + RBAC Template
 
-This template provides a backend API structure with built-in RBAC/ABAC middleware.
+This template provides a specific NestJS backend structure with built-in RBAC/ABAC guards.
 
 ## Features
-- **Next.js 13+**: App Router structure.
-- **Prisma**: Database ORM with User, Role, Permission schema.
-- **Middleware**: Example `middleware.ts` for route protection.
-- **Shared Logic**: Uses the same `policy.ts` structure as the frontend for consistency.
+- **NestJS**: Modular architecture with Controllers, Services, and Modules.
+- **Prisma**: Database ORM (Schema provided).
+- **Guards & Decorators**: `@CheckPermissions('delete', 'todos', ...)` for declarative route protection.
+- **Unified Logic**: Uses the same `policy.ts` engine structure as the frontend.
 
 ## Getting Started
 
 1. `npm install`
 2. `npx prisma generate`
-3. `npm run dev`
+3. `npm run start:dev`
 
 ## Usage
 
 - Define database models in `prisma/schema.prisma`.
-- Implement policy handlers in `lib/auth/policy.ts`.
-- Use `hasPermission` in API routes or Middleware to check access.
+- Implement policy handlers in `src/auth/policy.ts`.
+- Use the `@CheckPermissions` decorator on your Controller methods.

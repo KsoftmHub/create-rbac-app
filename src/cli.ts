@@ -32,7 +32,7 @@ async function init() {
       message: 'Select a template:',
       choices: [
         { title: 'React (Vite + TS + RBAC)', value: 'template-react' },
-        { title: 'API (Next.js + Prisma + RBAC)', value: 'template-api' },
+        { title: 'API (NestJS + Prisma + RBAC)', value: 'template-api' },
       ],
       initial: 0,
     }

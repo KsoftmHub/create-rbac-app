@@ -1,5 +1,6 @@
-import { User, ResourceType } from './types';
+import { User } from './types';
 
+// Same logic as React template for consistency
 export const POLICY_HANDLERS = {
   ALWAYS_ALLOW: () => true,
 
@@ -20,29 +21,3 @@ export const POLICY_HANDLERS = {
 };
 
 export type PolicyName = keyof typeof POLICY_HANDLERS;
-
-export function hasPermission(
-  user: User | null,
-  resource: ResourceType,
-  action: string,
-  data?: any
-): boolean {
-  if (!user) return false;
-
-  return user.roles.some((role) => {
-    const permission = role.permissions.find(
-      (p) => p.resource === resource && p.action === action
-    );
-
-    if (!permission) return false;
-
-    const handler = POLICY_HANDLERS[permission.policy as PolicyName];
-
-    if (!handler) {
-      console.warn(`Policy handler "${permission.policy}" not defined in code.`);
-      return false;
-    }
-
-    return handler(user, data);
-  });
-}
